@@ -1,0 +1,81 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #fafafa;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.item:hover {
+  background: #f0f0f0;
+  border-color: #d1d5d9;
+}
+
+.item.completed {
+  opacity: 0.7;
+}
+
+.item.completed .text {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.checkbox {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.text {
+  flex: 1;
+  font-size: 1rem;
+  cursor: pointer;
+  word-break: break-word;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.text:hover {
+  color: #667eea;
+}
+
+.editInput {
+  flex: 1;
+  padding: 0.5rem;
+  border: 2px solid #667eea;
+  border-radius: 4px;
+  font-size: 1rem;
+  outline: none;
+  background: white;
+}
+
+.deleteButton {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: #ff6b6b;
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.deleteButton:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.item:not(:hover) .deleteButton {
+  opacity: 0.3;
+}
