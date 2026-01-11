@@ -23,6 +23,10 @@ class Settings(BaseModel):
     # ログ設定
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
+    # LINE Messaging API設定
+    line_channel_access_token: str = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "")
+    line_user_id: str = os.getenv("LINE_USER_ID", "")
+
 
 # グローバル設定インスタンス
 settings = Settings()

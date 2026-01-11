@@ -13,7 +13,7 @@ from config.settings import settings
 from src.vault_reader import VaultReader
 from src.analyzer import WeeklyReportAnalyzer
 from src.writer import MarkdownWriter
-from src.notifier import DesktopNotifier
+from src.notifier import DesktopNotifier, LINENotifier
 
 
 def setup_logging():
@@ -62,6 +62,7 @@ def main():
         if report is None:
             logger.warning("今週の週報ファイルが見つかりません")
             DesktopNotifier.notify_error("今週の週報ファイルが見つかりません")
+            LINENotifier.notify("⚠️ 週報AIレビュー エラー\n\n今週の週報ファイルが見つかりません")
             return
 
         logger.info(f"週報を読み込みました: {report.file_path}")
@@ -93,19 +94,23 @@ def main():
         if not success:
             logger.error("週報の書き込みに失敗しました")
             DesktopNotifier.notify_error("週報の書き込みに失敗しました")
+            LINENotifier.notify("⚠️ 週報AIレビュー エラー\n\n週報の書き込みに失敗しました")
             return
 
         # 5. 通知送信
         if is_weekend:
             DesktopNotifier.notify_weekend_review(analysis_result)
+            LINENotifier.notify_weekend_review(analysis_result)
         else:
             DesktopNotifier.notify_daily_reminder(analysis_result)
+            LINENotifier.notify_daily_reminder(analysis_result)
 
         logger.info("=== 週報AIレビュー 正常終了 ===")
 
     except Exception as e:
         logger.error(f"エラーが発生しました: {e}", exc_info=True)
         DesktopNotifier.notify_error(f"エラー: {str(e)}")
+        LINENotifier.notify(f"⚠️ 週報AIレビュー エラー\n\nエラー: {str(e)}")
         sys.exit(1)
 
 

@@ -30,7 +30,9 @@ Obsidianで管理している週報を毎日AIが自動確認し、評価とネ�
 - **旧テンプレート（v1）**:
   - 目標とToDoの進捗確認
   - 簡潔なリマインドメッセージ
-- デスクトップ通知
+- **通知機能**:
+  - macOSデスクトップ通知
+  - LINE通知（オプション）
 
 ### 週末モード（詳細評価）
 - **新テンプレート（v2）**:
@@ -102,7 +104,43 @@ VAULT_PATH=/Users/koikesho/Library/Mobile Documents/iCloud~md~obsidian/Documents
 OPENAI_API_KEY=sk-your-api-key-here
 OPENAI_MODEL=gpt-4o
 LOG_LEVEL=INFO
+LINE_CHANNEL_ACCESS_TOKEN=  # オプション：LINEで通知を受け取る場合に設定
+LINE_USER_ID=  # オプション：自分のLINE User ID
 ```
+
+#### LINE通知を設定する場合（オプション）
+
+スマホ（LINE）で通知を受け取りたい場合は以下の手順で設定：
+
+1. **LINE Developersコンソール**にアクセス
+   - https://developers.line.biz/console/
+2. **プロバイダーとチャネルを作成**
+   - 「新規プロバイダー作成」（既にある場合はスキップ）
+   - 「新規チャネル作成」→「Messaging API」を選択
+   - チャネル名: `週報AIレビュー`
+3. **Channel Access Tokenを発行**
+   - 作成したチャネルの設定画面を開く
+   - 「Messaging API設定」タブをクリック
+   - 一番下までスクロール
+   - 「チャネルアクセストークン（長期）」の「発行」ボタンをクリック
+   - 表示されたトークンをコピー
+4. **自分のUser IDを取得**
+   - 「チャネル基本設定」タブをクリック
+   - 画面下部の「あなたのユーザーID」を確認
+   - Uから始まる33文字の文字列をコピー
+5. **ボットを友だち追加（必須）**
+   - 「Messaging API設定」タブに戻る
+   - QRコードをスマホのLINEアプリでスキャン
+   - 表示されたボットを友だち追加
+   - ⚠️ **友だち追加しないとプッシュメッセージが届きません**
+6. **`.env`に設定**
+
+```env
+LINE_CHANNEL_ACCESS_TOKEN=your-channel-access-token-here
+LINE_USER_ID=your-user-id-here
+```
+
+**注意**: 両方未設定の場合、LINE通知はスキップされます（デスクトップ通知のみ）
 
 ### 3. 週報テンプレートの設定
 
@@ -127,7 +165,7 @@ cp templates/weekly-template-v2.md \
 ### 4. 手動実行でテスト
 
 ```bash
-python src/main.py
+python3 src/main.py
 ```
 
 ### 5. 自動実行の設定（launchd）
