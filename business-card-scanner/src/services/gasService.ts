@@ -18,23 +18,26 @@ export const saveToSpreadsheet = async (card: BusinessCard): Promise<GasResponse
   }
 
   try {
-    await fetch(gasUrl, {
+    // Content-Typeをtext/plainに設定してCORS制約を回避
+    const response = await fetch(gasUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
       },
       body: JSON.stringify(card),
-      mode: 'no-cors', // GASはCORSをサポートしていないため
     });
 
-    // no-corsモードでは、レスポンスの内容を読み取れない
-    // そのため、成功したと仮定する
-    // 実際のエラーハンドリングはGAS側でログに記録される
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-    return {
-      success: true,
-      message: 'スプレッドシートに保存しました',
-    };
+    const result: GasResponse = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || 'スプレッドシートへの保存に失敗しました');
+    }
+
+    return result;
   } catch (error) {
     console.error('GAS save error:', error);
     throw new Error(
@@ -57,14 +60,12 @@ export const testGasConnection = async (): Promise<boolean> => {
   }
 
   try {
-    await fetch(gasUrl, {
+    const response = await fetch(gasUrl, {
       method: 'GET',
-      mode: 'no-cors',
     });
 
-    // no-corsモードでは常にopaque responseが返る
-    // ネットワークエラーがなければ接続成功と判断
-    return true;
+    // レスポンスステータスが200番台なら接続成功
+    return response.ok;
   } catch (error) {
     console.error('GAS connection test failed:', error);
     return false;
