@@ -7,6 +7,11 @@
 - ✅ カメラプレビュー（背面カメラ優先）
 - ✅ 自動名刺検出（撮影ボタン不要、連続スキャン対応）
 - ✅ OCRテキスト抽出（Google Cloud Vision API）
+- ✅ **AI名刺情報抽出（OpenAI GPT-4o-mini）**
+  - 部署名と人名を正確に区別
+  - ルールベースより高精度な抽出
+  - エラー時は自動的にルールベース抽出にフォールバック
+  - 費用: 約0.14円/枚
 - ✅ 名刺情報パース（氏名、会社名、役職、部署、電話、FAX、メール、住所、URL、SNS）
 - ✅ スプレッドシートへの自動保存
 - ✅ 重複防止機能
@@ -16,6 +21,7 @@
 
 - **フロントエンド**: React + TypeScript + Vite
 - **OCR**: Google Cloud Vision API
+- **AI情報抽出**: OpenAI GPT-4o-mini
 - **データ保存**: Google Apps Script → Googleスプレッドシート
 - **開発環境**: ローカルHTTPS（カメラアクセスに必須）
 
@@ -29,7 +35,17 @@
 4. 「認証情報」→「認証情報を作成」→「APIキー」
 5. APIキーに制限を設定（HTTPリファラー制限推奨）
 
-### 2. Google Apps Scriptの設定
+### 2. OpenAI APIの設定
+
+1. [OpenAI Platform](https://platform.openai.com/api-keys) にアクセス
+2. アカウントを作成またはログイン
+3. 「API keys」→「Create new secret key」
+4. APIキーをコピー（一度しか表示されません）
+5. 使用量制限の設定を推奨
+
+**費用**: GPT-4o-miniを使用するため、1枚あたり約0.14円と非常に低コストです。
+
+### 3. Google Apps Scriptの設定
 
 1. 新しいGoogleスプレッドシートを作成
 2. 「拡張機能」→「Apps Script」を開く
@@ -40,22 +56,28 @@
    - アクセスできるユーザー: 全員
 6. デプロイURLをコピー
 
-### 3. 環境変数の設定
+### 4. 環境変数の設定
 
 `.env.local` ファイルを編集し、以下を設定：
 
 ```env
+# Google Cloud Vision API Key
 VITE_VISION_API_KEY=your_vision_api_key_here
+
+# Google Apps Script Web App URL
 VITE_GAS_WEB_APP_URL=your_gas_web_app_url_here
+
+# OpenAI API Key（名刺情報のAI抽出に使用）
+VITE_OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-### 4. 依存関係のインストール
+### 5. 依存関係のインストール
 
 ```bash
 npm install
 ```
 
-### 5. 開発サーバーの起動
+### 6. 開発サーバーの起動
 
 ```bash
 npm run dev
@@ -110,6 +132,7 @@ business-card-scanner/
 │   │   └── useBusinessCardDetector.ts # 自動認識ロジック
 │   ├── services/
 │   │   ├── visionService.ts         # Vision API連携
+│   │   ├── openaiService.ts         # OpenAI API連携（AI名刺情報抽出）
 │   │   └── gasService.ts            # GAS連携
 │   ├── utils/
 │   │   └── textParser.ts            # 名刺情報パーサー
@@ -126,6 +149,7 @@ business-card-scanner/
 
 - **APIキー管理**: `.env.local` はGitにコミットしないでください（`.gitignore`に追加済み）
 - **Vision API料金**: 月1,000回まで無料、超過に注意
+- **OpenAI API料金**: GPT-4o-mini使用で約0.14円/枚（1,000枚で約140円）
 - **HTTPS必須**: カメラアクセスにはHTTPS環境が必要
 - **iOS Safari**: ユーザージェスチャー後にカメラ起動が必要な場合があります
 

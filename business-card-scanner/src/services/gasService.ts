@@ -33,7 +33,8 @@ export const saveToSpreadsheet = async (card: BusinessCard): Promise<GasResponse
 
     const result: GasResponse = await response.json();
 
-    if (!result.success) {
+    // 重複の場合は例外をスローせず、そのままレスポンスを返す
+    if (!result.success && !result.duplicate) {
       throw new Error(result.message || 'スプレッドシートへの保存に失敗しました');
     }
 

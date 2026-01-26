@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { scanVideoFrame } from '../services/visionService';
-import { parseBusinessCard, generateCardHash } from '../utils/textParser';
+import {
+  generateCardHash,
+  validateOcrTextForBusinessCard,
+  validateExtractedData
+} from '../utils/textParser';
+import { extractBusinessCardWithAI } from '../services/openaiService';
 import type { BusinessCard, ScanStatus } from '../types/businessCard';
 
 interface UseBusinessCardDetectorProps {
@@ -91,7 +96,7 @@ export const useBusinessCardDetector = ({
   }, [videoRef]);
 
   /**
-   * OCRスキャンを実行
+   * OCRスキャンを実行（多層防御アプローチ）
    */
   const performScan = useCallback(async () => {
     const video = videoRef.current;
@@ -103,24 +108,72 @@ export const useBusinessCardDetector = ({
       setStatus('processing');
       setError(null);
 
-      // OCR実行
+      // Step 1: OCR実行
       const ocrResult = await scanVideoFrame(video);
+      console.log('OCR結果:', ocrResult);
 
-      // 名刺情報をパース
-      const card = parseBusinessCard(ocrResult);
+      // Step 2: OCRテキスト事前検証（Phase 1）
+      const ocrValidation = validateOcrTextForBusinessCard(
+        ocrResult.fullText,
+        ocrResult.lines
+      );
 
-      // 有効な名刺情報かチェック（名前と会社名が必須）
+      if (!ocrValidation.isValid) {
+        console.log('OCR事前検証で却下:', ocrValidation.reason);
+        setStatus('idle');
+        return;
+      }
+
+      console.log(`OCR検証通過（スコア: ${ocrValidation.score}%）`);
+
+      // Step 3: AI抽出
+      const extracted = await extractBusinessCardWithAI(ocrResult.fullText);
+      console.log('AI抽出結果:', extracted);
+
+      // Step 4: AI名刺判定チェック（Phase 2）
+      if (!extracted.isBusinessCard) {
+        console.log('AIが名刺でないと判定しました');
+        setStatus('idle');
+        return;
+      }
+
+      // Step 5: BusinessCard型に変換（rawTextを含む）
+      const card: BusinessCard = {
+        name: extracted.name || '',
+        nameKana: extracted.nameKana,
+        company: extracted.company || '',
+        department: extracted.department,
+        position: extracted.position,
+        phone: extracted.phone,
+        fax: extracted.fax,
+        email: extracted.email,
+        address: extracted.address,
+        postalCode: extracted.postalCode,
+        url: extracted.url,
+        sns: extracted.sns,
+        scannedAt: new Date().toISOString(),
+        rawText: ocrResult.fullText,
+      };
+
+      // Step 6: 抽出データ検証（Phase 3）
+      const dataValidation = validateExtractedData(card, ocrResult.fullText);
+      if (!dataValidation.isValid) {
+        console.log('抽出データ検証で却下:', dataValidation.reason);
+        setStatus('idle');
+        return;
+      }
+
+      // Step 7: 既存の名前・会社名チェック
       if (!card.name || !card.company) {
         console.log('Invalid card data: missing name or company');
         setStatus('idle');
         return;
       }
 
-      // 重複チェック
+      // Step 8: 重複チェック
       const cardHash = generateCardHash(card);
       const now = Date.now();
 
-      // クールダウン期間中、または同じカードの場合はスキップ
       if (
         lastScanHashRef.current === cardHash &&
         now - lastScanTimeRef.current < COOLDOWN_PERIOD
@@ -131,6 +184,7 @@ export const useBusinessCardDetector = ({
       }
 
       // 成功
+      console.log('✓ すべての検証を通過しました');
       lastScanHashRef.current = cardHash;
       lastScanTimeRef.current = now;
       setCurrentCard(card);

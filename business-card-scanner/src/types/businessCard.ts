@@ -14,7 +14,8 @@ export interface BusinessCard {
   url?: string; // URL
   sns?: string; // SNS
   scannedAt: string; // スキャン日時
-  rawText?: string; // OCR生テキスト
+  rawText?: string; // OCR生テキスト（表面）
+  rawTextBack?: string; // OCR生テキスト（裏面）
 }
 
 // OCR結果の型定義
