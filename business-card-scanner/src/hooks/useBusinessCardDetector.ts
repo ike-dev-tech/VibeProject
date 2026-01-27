@@ -21,9 +21,9 @@ interface UseBusinessCardDetectorReturn {
   scanCount: number;
 }
 
-// フレーム安定性検出の設定
-const STABILITY_THRESHOLD = 0.02; // 2%以下の変化で安定と判定
-const REQUIRED_STABLE_FRAMES = 5; // 5フレーム連続で安定が必要
+// フレーム安定性検出の設定（スマホでの手ブレを考慮して緩めに設定）
+const STABILITY_THRESHOLD = 0.06; // 6%以下の変化で安定と判定（手ブレ対応）
+const REQUIRED_STABLE_FRAMES = 3; // 3フレーム連続で安定が必要
 const SAMPLING_INTERVAL = 200; // 200msごとにサンプリング
 const COOLDOWN_PERIOD = 3000; // 3秒間のクールダウン
 
